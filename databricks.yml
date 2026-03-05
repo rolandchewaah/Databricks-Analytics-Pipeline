@@ -1,0 +1,16 @@
+bundle:
+  name: ingestion_pipeline
+
+workspace:
+  # Keep it simple and stable
+  root_path: /Shared/ingestion-pipeline/${bundle.target}
+
+include:
+  - resources/*.yml
+
+targets:
+  dev:
+    mode: development
+
+  prod:
+    mode: production
