@@ -1,5 +1,5 @@
 bundle:
-  name: ingestion_pipeline
+  name: Dataaabricks-Analytics-Pipeline
 
 workspace:
   # Keep it simple and stable

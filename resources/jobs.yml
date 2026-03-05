@@ -1,0 +1,24 @@
+resources:
+  jobs:
+    ingestion_job:
+      name: "Ingestion Pipeline (${bundle.target})"
+
+      tasks:
+        - task_key: ingest_raw
+          job_cluster_key: ingestion_cluster
+          python_task:
+            python_file: ../src/ingest_data.py
+          environment_variables:
+            # Override these via GitHub secrets/env vars if needed
+            INPUT_PATH: "dbfs:/FileStore/ingestion/input/"
+            SCHEMA_LOCATION: "dbfs:/FileStore/ingestion/schema/"
+            CHECKPOINT_LOCATION: "dbfs:/FileStore/ingestion/checkpoint/"
+            TARGET_TABLE: "main.default.raw_ingested_data"
+
+      job_clusters:
+        - job_cluster_key: ingestion_cluster
+          new_cluster:
+            spark_version: 14.3.x-scala2.12
+            node_type_id: Standard_DS3_v2
+            num_workers: 1
+            autotermination_minutes: 30
