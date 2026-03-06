@@ -18,9 +18,8 @@ resources:
               - "--target-table"
               - "main.default.raw_ingested_data"
 
-      job_clusters:
-        - job_cluster_key: ingestion_cluster
-          new_cluster:
-            spark_version: 14.3.x-scala2.12
-            node_type_id: Standard_DS3_v2
-            num_workers: 1
+      new_cluster:
+        spark_version: 14.3.x-scala2.12
+        node_type_id: ${var.node_type_id}
+        num_workers: 1
+        autotermination_minutes: 30
