@@ -13,7 +13,8 @@ def parse_args():
     parser.add_argument("--schema-location", default="dbfs:/FileStore/ingestion/schema/")
     parser.add_argument("--checkpoint-location", default="dbfs:/FileStore/ingestion/checkpoint/")
     parser.add_argument("--target-table", default="main.default.raw_ingested_data")
-    return parser.parse_args()
+    args, _ = parser.parse_known_args()
+    return args
 
 
 def load_config(args) -> dict:
