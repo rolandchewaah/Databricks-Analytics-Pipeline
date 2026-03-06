@@ -1,6 +1,35 @@
 from unittest.mock import MagicMock
 from src.ingest_data import get_env, load_config, build_stream, start_write
 
+from unittest.mock import MagicMock, patch
+from src import ingest_data
+
+
+@patch("src.ingest_data.start_write")
+@patch("src.ingest_data.build_stream")
+@patch("pyspark.sql.SparkSession")
+def test_main_calls_spark_flow(mock_spark_session, mock_build_stream, mock_start_write, monkeypatch):
+    monkeypatch.setenv("INPUT_PATH", "dbfs:/input/")
+    monkeypatch.setenv("SCHEMA_LOCATION", "dbfs:/schema/")
+    monkeypatch.setenv("CHECKPOINT_LOCATION", "dbfs:/checkpoint/")
+    monkeypatch.setenv("TARGET_TABLE", "main.default.raw_ingested_data")
+
+    spark = MagicMock()
+    mock_spark_session.builder.appName.return_value.getOrCreate.return_value = spark
+
+    df = MagicMock()
+    mock_build_stream.return_value = df
+
+    query = MagicMock()
+    mock_start_write.return_value = query
+
+    ingest_data.main()
+
+    mock_spark_session.builder.appName.assert_called_once_with("IngestionJob")
+    mock_build_stream.assert_called_once()
+    mock_start_write.assert_called_once()
+    query.awaitTermination.assert_called_once()
+
 
 def test_get_env_default(monkeypatch):
     monkeypatch.delenv("FOO", raising=False)
