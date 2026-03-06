@@ -1,6 +1,33 @@
 from unittest.mock import MagicMock
 from src.ingest_data import get_env, load_config, build_stream, start_write
 
+from unittest.mock import MagicMock, patch
+from src import ingest_data
+
+def test_main_covers_runtime_flow(monkeypatch):
+    # Ensure config is stable
+    monkeypatch.setenv("INPUT_PATH", "dbfs:/input/")
+    monkeypatch.setenv("SCHEMA_LOCATION", "dbfs:/schema/")
+    monkeypatch.setenv("CHECKPOINT_LOCATION", "dbfs:/checkpoint/")
+    monkeypatch.setenv("TARGET_TABLE", "main.default.raw_ingested_data")
+
+    # Fake SparkSession class
+    fake_spark_session = MagicMock()
+    spark = MagicMock()
+    fake_spark_session.builder.appName.return_value.getOrCreate.return_value = spark
+
+    df = MagicMock()
+    query = MagicMock()
+
+    with patch("src.ingest_data.build_stream", return_value=df) as mock_build, \
+         patch("src.ingest_data.start_write", return_value=query) as mock_write:
+        ingest_data.main(spark_session_cls=fake_spark_session)
+
+    fake_spark_session.builder.appName.assert_called_once_with("IngestionJob")
+    mock_build.assert_called_once()     # build_stream called
+    mock_write.assert_called_once()     # start_write called
+    query.awaitTermination.assert_called_once()
+
 
 def test_get_env_default_when_missing(monkeypatch):
     monkeypatch.delenv("FOO", raising=False)

@@ -33,9 +33,8 @@ def start_write(df, cfg: dict):
     )
 
 def main(spark_session_cls=None) -> None:
-    # Allow tests to pass in a fake SparkSession class to avoid importing pyspark
     if spark_session_cls is None:
-        from pyspark.sql import SparkSession  # imported only on Databricks/runtime
+        from pyspark.sql import SparkSession
         spark_session_cls = SparkSession
 
     cfg = load_config()
@@ -43,6 +42,3 @@ def main(spark_session_cls=None) -> None:
     df = build_stream(spark, cfg)
     query = start_write(df, cfg)
     query.awaitTermination()
-
-if __name__ == "__main__":  # pragma: no cover
-    main()
