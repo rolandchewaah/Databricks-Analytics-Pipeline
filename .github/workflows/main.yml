@@ -85,7 +85,7 @@ jobs:
     env:
       DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_DEV }}
       DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN_DEV }}
-      REPO_PATH: /Workspace/Users/${{ secrets.DATABRICKS_USER }}/ingestion-pipeline
+      REPO_PATH: /Workspace/Users/${{ secrets.DATABRICKS_USER }}/Databricks-Analytics-Pipeline
       GIT_REPO_URL: https://github.com/${{ github.repository }}.git
 
     steps:
@@ -130,7 +130,7 @@ jobs:
     env:
       DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_PROD }}
       DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN_PROD }}
-      REPO_PATH: /Workspace/Users/${{ secrets.DATABRICKS_USER }}/ingestion-pipeline
+      REPO_PATH: /Workspace/Users/${{ secrets.DATABRICKS_USER }}/Databricks-Analytics-Pipeline
       GIT_REPO_URL: https://github.com/${{ github.repository }}.git
 
     steps:
