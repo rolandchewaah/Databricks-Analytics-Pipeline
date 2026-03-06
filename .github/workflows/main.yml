@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 jobs:
   test:
@@ -28,12 +29,9 @@ jobs:
         run: |
           set -euo pipefail
           python -m pip install --upgrade pip
-          if [ -f requirements-dev.txt ]; then
-            pip install -r requirements-dev.txt
-          fi
-          if [ -f requirements.txt ]; then
-            pip install -r requirements.txt
-          fi
+          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install pytest pytest-cov
 
       - name: Run tests with coverage
         shell: bash
@@ -50,15 +48,37 @@ jobs:
           name: coverage-xml
           path: coverage.xml
 
-  deploy-dev:
-    name: Deploy Dev (Asset Bundle)
+  azure-oidc-login:
+    name: Azure CLI Login (OIDC)
     runs-on: ubuntu-latest
     needs: test
+
+    steps:
+      - name: Azure CLI Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Azure CLI script
+        uses: azure/cli@v2
+        with:
+          azcliversion: latest
+          inlineScript: |
+            az account show
+
+  deploy-dev:
+    name: Deploy Dev
+    runs-on: ubuntu-latest
     environment: development
+    needs: [test, azure-oidc-login]
 
     env:
       DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_DEV }}
       DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN_DEV }}
+      REPO_PATH: /Workspace/Users/${{ secrets.DATABRICKS_USER }}/ingestion-pipeline
+      GIT_REPO_URL: https://github.com/${{ github.repository }}.git
 
     steps:
       - name: Checkout repository
@@ -67,15 +87,70 @@ jobs:
       - name: Setup Databricks CLI
         uses: databricks/setup-cli@main
 
-      - name: Validate bundle
+      - name: Create or Update Databricks Repo (Dev)
         shell: bash
-        run: databricks bundle validate -t dev
+        run: |
+          set -euo pipefail
+          BRANCH_NAME="${GITHUB_REF#refs/heads/}"
 
-      - name: Deploy bundle
-        shell: bash
-        run: databricks bundle deploy -t dev
+          echo "REPO_PATH: ${REPO_PATH}"
+          echo "GIT_REPO_URL: ${GIT_REPO_URL}"
+          echo "BRANCH: ${BRANCH_NAME}"
 
-      # Optional smoke test (recommended)
-      - name: Run ingestion job (smoke test)
+          if databricks repos get "${REPO_PATH}" > /dev/null 2>&1; then
+            databricks repos update "${REPO_PATH}" --branch "${BRANCH_NAME}"
+          else
+            databricks repos create --url "${GIT_REPO_URL}" --provider github --path "${REPO_PATH}"
+            databricks repos update "${REPO_PATH}" --branch "${BRANCH_NAME}"
+          fi
+
+      # Optional: bundle deploy (uncomment if you use Databricks Asset Bundles)
+      - name: Bundle validate/deploy/run
         shell: bash
-        run: databricks bundle run ingestion_job -t dev
+        run: |
+          databricks bundle validate -t dev
+          databricks bundle deploy -t dev
+          databricks bundle run ingestion_job -t dev
+
+  deploy-prod:
+    name: Deploy Prod
+    runs-on: ubuntu-latest
+    environment: production
+    needs: deploy-dev
+
+    env:
+      DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_PROD }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN_PROD }}
+      REPO_PATH: /Workspace/Users/${{ secrets.DATABRICKS_USER }}/ingestion-pipeline
+      GIT_REPO_URL: https://github.com/${{ github.repository }}.git
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Databricks CLI
+        uses: databricks/setup-cli@main
+
+      - name: Create or Update Databricks Repo (Prod)
+        shell: bash
+        run: |
+          set -euo pipefail
+          BRANCH_NAME="${GITHUB_REF#refs/heads/}"
+
+          echo "REPO_PATH: ${REPO_PATH}"
+          echo "GIT_REPO_URL: ${GIT_REPO_URL}"
+          echo "BRANCH: ${BRANCH_NAME}"
+
+          if databricks repos get "${REPO_PATH}" > /dev/null 2>&1; then
+            databricks repos update "${REPO_PATH}" --branch "${BRANCH_NAME}"
+          else
+            databricks repos create --url "${GIT_REPO_URL}" --provider github --path "${REPO_PATH}"
+            databricks repos update "${REPO_PATH}" --branch "${BRANCH_NAME}"
+          fi
+
+      # Optional: bundle deploy (uncomment if you use Databricks Asset Bundles)
+      - name: Bundle deploy/run
+        shell: bash
+        run: |
+          databricks bundle deploy -t prod
+          databricks bundle run ingestion_job -t prod
