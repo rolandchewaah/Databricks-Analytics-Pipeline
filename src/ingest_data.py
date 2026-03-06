@@ -32,10 +32,14 @@ def start_write(df, cfg: dict):
           .toTable(cfg["target_table"])
     )
 
-def main() -> None:
-    from pyspark.sql import SparkSession
+def main(spark_session_cls=None) -> None:
+    # Allow tests to pass in a fake SparkSession class to avoid importing pyspark
+    if spark_session_cls is None:
+        from pyspark.sql import SparkSession  # imported only on Databricks/runtime
+        spark_session_cls = SparkSession
+
     cfg = load_config()
-    spark = SparkSession.builder.appName("IngestionJob").getOrCreate()
+    spark = spark_session_cls.builder.appName("IngestionJob").getOrCreate()
     df = build_stream(spark, cfg)
     query = start_write(df, cfg)
     query.awaitTermination()
