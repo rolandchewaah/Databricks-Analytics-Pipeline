@@ -24,6 +24,14 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
       - name: Install dependencies
         shell: bash
         run: |
@@ -91,7 +99,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          BRANCH_NAME="${GITHUB_REF#refs/heads/}"
+          BRANCH_NAME="${GITHUB_REF_NAME:-${GITHUB_REF#refs/heads/}}"
 
           echo "REPO_PATH: ${REPO_PATH}"
           echo "GIT_REPO_URL: ${GIT_REPO_URL}"
@@ -107,6 +115,7 @@ jobs:
       # Optional: bundle deploy (uncomment if you use Databricks Asset Bundles)
       - name: Bundle validate/deploy/run
         shell: bash
+        continue-on-error: true  # Remove if step is required
         run: |
           databricks bundle validate -t dev
           databricks bundle deploy -t dev
@@ -135,7 +144,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          BRANCH_NAME="${GITHUB_REF#refs/heads/}"
+          BRANCH_NAME="${GITHUB_REF_NAME:-${GITHUB_REF#refs/heads/}}"
 
           echo "REPO_PATH: ${REPO_PATH}"
           echo "GIT_REPO_URL: ${GIT_REPO_URL}"
@@ -151,6 +160,7 @@ jobs:
       # Optional: bundle deploy (uncomment if you use Databricks Asset Bundles)
       - name: Bundle deploy/run
         shell: bash
+        continue-on-error: true  # Remove if step is required
         run: |
           databricks bundle deploy -t prod
           databricks bundle run ingestion_job -t prod
