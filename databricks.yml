@@ -13,11 +13,11 @@ targets:
     mode: development
     default: true
     workspace:
-      host: ${secrets.DATABRICKS_HOST_DEV}
+      # host: ${secrets.DATABRICKS_HOST_DEV}
       root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}
 
   prod:
     mode: production
     workspace:
-      host: ${secrets.DATABRICKS_HOST_PROD}
+      # host: ${secrets.DATABRICKS_HOST_PROD}
       root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}
