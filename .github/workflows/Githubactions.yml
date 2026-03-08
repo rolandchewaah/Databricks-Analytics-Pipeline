@@ -2,7 +2,8 @@ name: Githubactions
 
 on:
   push:
-    branches: [main]
+    branches:
+        - main
     paths-ignore:
       - ".github/**"
 
