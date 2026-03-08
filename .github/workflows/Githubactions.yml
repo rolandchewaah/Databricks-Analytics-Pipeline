@@ -99,19 +99,19 @@ jobs:
       - name: Create or Update Databricks Repo (Dev)
         shell: bash
         run: |
-          set -euo pipefail
-          BRANCH_NAME="${GITHUB_REF_NAME:-${GITHUB_REF#refs/heads/}}"
-
-          echo "REPO_PATH: ${REPO_PATH}"
-          echo "GIT_REPO_URL: ${GIT_REPO_URL}"
-          echo "BRANCH: ${BRANCH_NAME}"
-
-          if databricks repos get "${REPO_PATH}" > /dev/null 2>&1; then
-            databricks repos update "${REPO_PATH}" --branch "${BRANCH_NAME}"
-          else
-            databricks repos create --url "${GIT_REPO_URL}" --provider github --path "${REPO_PATH}"
-            databricks repos update "${REPO_PATH}" --branch "${BRANCH_NAME}"
-          fi
+            set -euo pipefail
+            BRANCH_NAME="${GITHUB_REF_NAME:-${GITHUB_REF#refs/heads/}}"
+    
+            echo "REPO_PATH: ${REPO_PATH}"
+            echo "GIT_REPO_URL: ${GIT_REPO_URL}"
+            echo "BRANCH: ${BRANCH_NAME}"
+    
+            if databricks repos get "${REPO_PATH}" > /dev/null 2>&1; then
+                databricks repos update "${REPO_PATH}" --branch "${BRANCH_NAME}"
+            else
+                databricks repos create "${GIT_REPO_URL}" gitHub --path "${REPO_PATH}"
+                databricks repos update "${REPO_PATH}" --branch "${BRANCH_NAME}"
+            fi
 
       # Optional: bundle deploy (uncomment if you use Databricks Asset Bundles)
       - name: Bundle validate/deploy/run
