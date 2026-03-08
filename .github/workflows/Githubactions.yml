@@ -114,13 +114,14 @@ jobs:
             fi
 
       # Optional: bundle deploy (uncomment if you use Databricks Asset Bundles)
-      - name: Bundle validate/deploy/run
+      - name: Bundle validate/deploy/run (Dev)
         shell: bash
-        continue-on-error: true  # Remove if step is required
+        # continue-on-error: true  # Remove if step is required
         run: |
-          databricks bundle validate -t dev
-          databricks bundle deploy -t dev
-          databricks bundle run ingestion_job -t dev
+            set -euo pipefail
+            databricks bundle validate -t dev
+            databricks bundle deploy -t dev
+            databricks bundle run job -t dev
 
   deploy-prod:
     name: Deploy Prod
