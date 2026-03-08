@@ -100,7 +100,7 @@ jobs:
             set -euo pipefail
             databricks bundle validate -t dev
             databricks bundle deploy -t dev
-            databricks bundle run ingestion_job -t dev
+        # databricks bundle run ingestion_job -t dev
 
   deploy-prod:
     name: Deploy Prod
@@ -124,4 +124,4 @@ jobs:
       run: |
         set -euo pipefail
         databricks bundle deploy -t prod
-        databricks bundle run ingestion_job -t prod
+     # databricks bundle run ingestion_job -t prod
