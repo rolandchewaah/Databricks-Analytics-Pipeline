@@ -12,11 +12,12 @@ targets:
   dev:
     mode: development
     default: true
-      host: ${DATABRICKS_HOST_DEV}      
-        root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}
+    workspace:
+      host: ${DATABRICKS_HOST_DEV}
+      root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}
 
   prod:
     mode: production
     workspace:
-      host: ${DATABRICKS_HOST_PROD}      
-        root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}
+      host: ${DATABRICKS_HOST_PROD}
+      root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}
